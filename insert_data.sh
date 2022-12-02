@@ -12,34 +12,23 @@ echo $($PSQL "TRUNCATE teams, games")
 
 cat games.csv| while IFS="," read YEAR ROUND WINNER OPPONENT WINNER_GOALS OPPONENT_GOALS
 do
-# remove header
+  #ignore csv file header
   if [[ $YEAR != "year" ]]
   then
-  # get two teams ids
-  WINNER_ID=$($PSQL "SELECT team_id FROM teams WHERE name='$WINNER'")
+  #get ID of loser
   OPPONENT_ID=$($PSQL "SELECT team_id FROM teams WHERE name='$OPPONENT'")
-    # if winner not found
-    if [[ -z $WINNER_ID ]]
-    then
-    # insert winner
-    INSERT_WINNER_RESULT=$($PSQL "INSERT INTO teams(name) VALUES('$WINNER')")
-      #show process ok
-      if [[ $INSERT_WINNER_RESULT == "INSERT 0 1" ]]
-      then 
-      echo Inserted one team, $WINNER
-      fi
-    fi
-
-    # if opponent not found
+  #get ID of winner
+  WINNER_ID=$($PSQL "SELECT team_id FROM teams WHERE name='$WINNER'")  
+    #no matching opponent in database
     if [[ -z $OPPONENT_ID ]]
     then
-    # insert opponent
-    INSERT_OPPONENT_RESULT=$($PSQL "INSERT INTO teams(name) VALUES('$OPPONENT')")
-      # show process ok
-      if [[ $INSERT_OPPONENT_RESULT == "INSERT 0 1" ]]
-      then
-      echo Inserted one team, $OPPONENT
-      fi
+      OPPONENT_INSERT_RESULT=$($PSQL "INSERT INTO teams(name) VALUES('$OPPONENT')")
+    fi  
+    
+    #no matching winner in database - insert new winner
+    if [[ -z $WINNER_ID ]]
+    then
+      INSERT_WINNER_RESULT=$($PSQL "INSERT INTO teams(name) VALUES('$WINNER')")
     fi
   fi
 done
